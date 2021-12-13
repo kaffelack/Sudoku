@@ -1,5 +1,6 @@
 public class SudokuSolver implements InterfaceSudokuSolver {
 	
+	private int dimension;
 	private final static int EMPTY = 0;
 	private final static int DEFAULT_SIZE = 9;
 	private final static int[][] TEST_BOARD = { { 0, 0, 8, 0, 0, 9, 0, 6, 2 }, { 0, 0, 0, 0, 0, 0, 0, 0, 5 },
@@ -11,20 +12,21 @@ public class SudokuSolver implements InterfaceSudokuSolver {
 	
 	public SudokuSolver() { //skapar ett bräde med standard storlek 9x9
 		this(DEFAULT_SIZE);
+		this.dimension = 9;
 	}
 	
 	public SudokuSolver(int size) {
 
 		// Ta bort kommentaren för att använda testbrädet
-		this.board = TEST_BOARD;
+		//this.board = TEST_BOARD;
+		this.dimension = size;
+		this.board = new int[size][size];
 
-		//this.board = new int[size][size];
-
-		/*for (int i = 0; i < size; i++) {
+		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < size; j++) {
 				board[i][j] = EMPTY; //skapar ett bräde med size*size storlek och gör brädet tomt
 			}
-		}*/
+		}
 	}
 	
 	@Override
@@ -33,13 +35,17 @@ public class SudokuSolver implements InterfaceSudokuSolver {
 			this.board[r][c] = nbr; //sätter värdet på rad r och kolonn c till nbr
 	}
 	
+	public int getDimension() {
+		return dimension;
+	}
+	
 	/**
 	 * Method that helps to check that all arguments are within the dimension
 	 * 
 	 * @param args Integers to compare to dimension
 	 */
 	
-	private void checkArguments(int... args) { //... betyder att inputen är en 3 enheter lång vektor
+	private void checkArguments(int... args) { //... betyder att inputen är en vektor
 		int dim = this.getDimension(); //returnerar brädets dimension
 
 		for (int a : args) {
