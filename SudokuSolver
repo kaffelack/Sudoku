@@ -1,0 +1,228 @@
+public class SudokuSolver implements InterfaceSudokuSolver {
+	
+	private final static int EMPTY = 0;
+	private final static int DEFAULT_SIZE = 9;
+	private final static int[][] TEST_BOARD = { { 0, 0, 8, 0, 0, 9, 0, 6, 2 }, { 0, 0, 0, 0, 0, 0, 0, 0, 5 },
+			{ 1, 0, 2, 5, 0, 0, 0, 0, 0 }, { 0, 0, 0, 2, 1, 0, 0, 9, 0 }, { 0, 5, 0, 0, 0, 0, 6, 0, 0 },
+			{ 6, 0, 0, 0, 0, 0, 0, 2, 8 }, { 4, 1, 0, 6, 0, 8, 0, 0, 0 }, { 8, 6, 0, 0, 0, 0, 1, 0, 0 },
+			{ 0, 0, 0, 0, 0, 0, 4, 0, 0 } };
+	
+	private int[][] board;
+	
+	public SudokuSolver() { //skapar ett bräde med standard storlek 9x9
+		this(DEFAULT_SIZE);
+	}
+	
+	public SudokuSolver(int size) {
+
+		// Ta bort kommentaren för att använda testbrädet
+		this.board = TEST_BOARD;
+
+		//this.board = new int[size][size];
+
+		/*for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				board[i][j] = EMPTY; //skapar ett bräde med size*size storlek och gör brädet tomt
+			}
+		}*/
+	}
+	
+	@Override
+	public void setNumber(int r, int c, int nbr) {
+			checkArguments(nbr, c ,r); //kollar så att r, c och nbr är inuti brädets dimension
+			this.board[r][c] = nbr; //sätter värdet på rad r och kolonn c till nbr
+	}
+	
+	/**
+	 * Method that helps to check that all arguments are within the dimension
+	 * 
+	 * @param args Integers to compare to dimension
+	 */
+	
+	private void checkArguments(int... args) { //... betyder att inputen är en 3 enheter lång vektor
+		int dim = this.getDimension(); //returnerar brädets dimension
+
+		for (int a : args) {
+			if (a > dim || a < 0) {
+				throw new IllegalArgumentException(); //throwar exception när något av argumenten är större än brädet på dimensionen
+			}                                                                 // eller mindre än noll
+
+		}
+	}
+	
+	@Override
+	public int getNumber(int r, int c) {
+		checkArguments(r, c); 
+		return this.board[r][c]; //returnerar brädets värde på rad r och kolonn c
+	}
+	
+	@Override
+	public void clearNumber(int r, int c) {
+		checkArguments(r, c);
+		this.board[r][c] = EMPTY; //tömmer brädet
+	}
+	
+	@Override
+	public boolean isValid(int r, int c, int nbr) {
+		checkArguments(r, c, nbr);
+		int v = this.board[r][c];
+		this.board[r][c] = EMPTY; //tar temporärt bort alla värden och lagrar i int v
+		boolean result = this.checkRow(r, nbr) && this.checkColumn(c, nbr) && this.checkGrid(r, c, nbr); 
+		this.board[r][c] = v; //kollar så att värdena är korrekta på alla sätt och sätter tillbaks in i brädet
+		return result;  //returnerar true elr false beroende på om brädet är korrekt uppbyggt eller ej
+	}
+	
+	/**
+	 * Checks if nbr is valid in the row
+	 * @param r
+	 * The row to check
+	 * @param c
+	 * The column to check
+	 * @param nbr
+	 * The number to verify
+	 * @return true if valid
+	 */
+	
+	private boolean checkRow(int r, int nbr) {
+		for (int n : this.board[r]) { //loopar genom hela raden r
+			if (nbr == n) {
+				return false; //om nbr finns någonstans i raden kan vi inte sätta in nbr igen
+			}
+		}
+		return true; //annars true
+	}
+	
+	/**
+	 * Checks if nbr is valid in the column
+	 * @param r
+	 * The row to check
+	 * @param c
+	 * The column to check
+	 * @param nbr
+	 * The number to verify
+	 * @return true if valid
+	 */
+	
+	private boolean checkColumn(int c, int nbr) {
+		for (int i = 0; i < this.getDimension(); i++) {
+			if (this.board[i][c] == nbr) {
+				return false; //precis samma tänk som i checkRow
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * Checks if nbr is valid in the grid
+	 * @param r
+	 * The row to check
+	 * @param c
+	 * The column to check
+	 * @param nbr
+	 * The number to verify
+	 * @return true if valid
+	 */
+	
+	private boolean checkGrid(int r, int c, int nbr) { //samma metod som för checkRow och checkColumn fast
+																				//kollar nu de små rutorna med olika färger
+		int gSize = (int) Math.sqrt(this.board.length);  //beräknar storleken på det lilla rutnätet (ex om vi har ett 9x9 bräde kommer varje															
+																				//...litet rutnät vara 3x3 (dvs roten ur 9)
+		int startRow = (r / gSize) * gSize;
+		int startCol = (c / gSize) * gSize; //beräknar startrad och startkolonn
+		for (int i = startRow; i < startRow + gSize; i++) {
+			for (int j = startCol; j < startCol + gSize; j++) { //loopar igenom hela rutnätet
+				if (this.board[i][j] == nbr) {
+					return false; //om nbr finns någonstans i det lilla rutnätet går inte sodukot att lösas för nbr
+				}
+			}
+		}
+		return true; //annars true
+	}
+	
+	@Override
+	public boolean isAllValid() { //loopar igenom alla rader och kolonner och anropar isValid för varje värde 
+		for (int r = 0; r < this.getDimension(); r++) {
+			for (int c = 0; c < this.getDimension(); c++) {
+				if (!isValid(r, c, this.board[r][c])) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	@Override
+	public boolean solve() {
+		return solve(0, 0);
+	}
+	
+	/**
+	 * Private helper method to recursivley try to solve the sudoku
+	 * @param r 
+	 * The row that is being tested
+	 * @param c
+	 * The column that is being tested
+	 * @return true if the sudoku is solved
+	 */
+	
+	private boolean solve(int r, int c) {
+		int dim = this.getDimension();
+		// If at last row, start returning true
+		if (r == dim) {
+			return true;
+		}
+		int nR, nC; //vi skapar nya rad- och kolumnvärden som kan användas för att se om nästa rad/kolumn går att lösa
+		if (c < dim - 1) { //kollar om vi inte är på sista kolumnen
+			nC = c + 1; //isåfall går vi till nästa kolumn som vanligt och stannar kvar på raden
+			nR = r;
+		} else { //annars om vi är på den sista kolumnen på en rad
+			nC = 0; //isåfall startar vi på nästa rad och första kolumnen
+			nR = r + 1;
+		}
+		if (this.board[r][c] == EMPTY) { //kollar om rutan redan har ett värde
+			for (int i = 1; i < dim + 1; i++) { //om inte, så loopar vi genom alla möjliga värden (oftast 1-9)...
+				if (this.isValid(r, c, i)) { //...och kollar om det valda värdet går att sätta in på rutan
+					this.board[r][c] = i;
+					if (this.solve(nR, nC)) { //om rutan efter detta går att lösa, returneras true
+						return true;
+					}
+					this.board[r][c] = EMPTY; //annars gör vi rutan tom igen
+				}
+			}
+			return false;
+		}
+		return this.isValid(r, c, this.board[r][c]) && this.solve(nR, nC); //om ett värde redan finns på rutan, kollar vi om det är giltigt...
+	}                                                                                                    //...och försöker lösa nästa
+	
+	
+	@Override
+	public void clear() { //loopar genom alla värden och tömmer dem
+		for (int i = 0; i < this.board.length; i++) {
+			for (int j = 0; j < this.board[i].length; j++) {
+				this.board[i][j] = EMPTY;
+			}
+		}
+	}
+	
+	@Override
+	public int[][] getMatrix() {
+		return this.copyArray(this.board);
+	}
+	
+	@Override
+	public void setMatrix(int[][] nbrs) {
+		this.board = this.copyArray(nbrs);
+	}
+	
+	private int[][] copyArray(int[][] arr) { //metod som kopierar en vektor
+		int k = arr.length;
+		int[][] temp = new int[k][k];
+
+		for (int i = 0; i < k; i++) {
+			for (int j = 0; j < k; j++) {
+				temp[i][j] = arr[i][j];
+			}
+		}
+		return temp;
+	}
+}
